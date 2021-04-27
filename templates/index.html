@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Hello World</title>
+</head>
+  <script src="js/pixi.min.js"></script>
+<body>
+  <script src="https://cdn.socket.io/3.1.3/socket.io.min.js" integrity="sha384-cPwlPLvBTa3sKAgddT6krw0cJat7egBga3DJepJyrLl4Q9/5WLra3rrnMcyTyOnh" crossorigin="anonymous"></script>
+  <script type="text/javascript">
+
+    namespace = '/test';
+    var socket = io(namespace);
+
+    socket.on('connect', function() {
+        console.log("Connected");   
+    });
+
+    socket.on('my_response', function(msg, cb) {
+        console.log("MyResponse");   
+    });
+
+    let type = "WebGL"
+    if(!PIXI.utils.isWebGLSupported()){
+      type = "canvas"
+    }
+    PIXI.utils.sayHello(type)
+
+    window.PIXI = PIXI;
+    window.PIXI[ "default" ] = PIXI;
+
+    const app = new PIXI.Application({
+        antialias: true,
+        autoDensity: true,
+        backgroundColor: 0x1099bb,
+        resolution: devicePixelRatio,
+    });
+    document.body.appendChild(app.view);
+
+    // create a new Sprite from an image path
+    const bunny = PIXI.Sprite.from('img/card.png');
+
+    bunny.interactive = true;
+    // center the sprite's anchor point
+    bunny.anchor.set(0.5);
+
+    // move the sprite to the center of the screen
+    bunny.x = app.screen.width / 2;
+    bunny.y = app.screen.height / 2;
+    bunny.on('mousedown', onDown);
+    bunny.on('touchstart', onDown);
+
+
+    app.stage.addChild(bunny);
+
+    // Listen for animate update
+    // app.ticker.add((delta) => {
+    //     // just for fun, let's rotate mr rabbit a little
+    //     // delta is 1 if running at 100% performance
+    //     // creates frame-independent transformation
+    //     bunny.rotation += 0.1 * delta;
+    // });
+
+
+    function onDown (eventData) {
+        socket.emit('my_event', {data: 'Touched'});
+        console.log("Touched");
+        bunny.scale.x += 0.3;
+        bunny.scale.y += 0.3;
+    }
+
+
+
+  </script>
+</body>
+</html>
