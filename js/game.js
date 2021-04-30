@@ -66,15 +66,24 @@ function newCard(tex, arr, cont){
     bunny1.anchor.set(0.5);
     bunny.addChild(bunny1);
     bunny.addChild(bunny2);
+    bunny.inHand = true;
+    bunny.isDraged = false;
     return bunny
 }
 
 function addCard(){
+        var tex = resourcesLoaded['card'+cardNumber].texture;
         card = new newCard(tex)
         arrCardsHand.push(card);
         // Add it into the scene
         // app.stage.addChild(bunny);
         cards.addChild(card);
+}
+
+function addCardToHand(){
+        cardNumber = (cardNumber+1)%54;
+        addCard();
+        arrSort(arrCardsHand)
 }
 
 const allObjects = new PIXI.Container();
@@ -86,19 +95,34 @@ allObjects.addChild(cards);
 cards.zIndex = 3;
 app.stage.addChild(allObjects);
 // Chainable `add` to enqueue a resource
-loader.add('card', 'img/card.png')
+loader.add('card'+1, 'img/card.png'); 
+for(var i=2; i<14; i++){
+    // loader.add('card'+i,      'img/SuitOfClubs/suitOfClubs(1x)'+i+'.png');
+    
+    // loader.add('card'+(13+i), 'img/SuitOfSpades/suitOfSpades(1x)'+i+'.png');
+    // loader.add('card'+(26+i), 'img/SuitOfDiamonds/suitOfDiamonds(1x)'+i+'.png');
+    // loader.add('card'+(39+i), 'img/SuitOfHearts/suitOfHearts(1x)'+i+'.png');
+    loader.add('card'+i,      'https://dummyimage.com/33x49/C11/fff&text='+i+'.png');
+    loader.add('card'+(13+i), 'https://dummyimage.com/33x49/1C1/fff&text='+i+'.png');
+    loader.add('card'+(26+i), 'https://dummyimage.com/33x49/11C/fff&text='+i+'.png');
+    loader.add('card'+(39+i), 'https://dummyimage.com/33x49/C1C/fff&text='+i+'.png');
+}
+
 var arrCardsHand = [];
 var arrCardsTable = [];
 var tex = null
+var cardNumber = 0;
+var resourcesLoaded = null;
 
 loader.load((loader, resources) => {
-    tex = resources.card.texture
-    for (let i = 0; i < 5; i++) {
+    resourcesLoaded = resources;
+    for (let i = 1; i <= 5; i++) {
+        // var str = 'clubs'+i
+        // tex = resourcesLoaded['clubs'+i].texture
         // Create our little bunny friend..
         console.log(resources);
-        addCard();
+        addCardToHand();
     };
-    arrSort(arrCardsHand);
 });
 
 
@@ -148,8 +172,6 @@ graphics
 allObjects.addChild(graphics);
 
 // Create a texture from an image path
-const imageTexture = PIXI.Texture.from('img/card.png');
-
 // Make the whole scene interactive
 app.stage.interactive = true;
 // Make sure stage captures all events when interactive
@@ -184,17 +206,22 @@ function onAdd(event){
     console.log("Here")
     if (this.zz > 0)
     {
-        addCard();
-        arrSort(arrCardsHand);
+        addCardToHand();
     }
     else{
-        arrCardsHand.pop().destroy();
-        arrSort(arrCardsHand);
+        if (arrCardsHand.length>0){
+            cardNumber -= 1;
+            arrCardsHand.pop().destroy();
+            arrSort(arrCardsHand);
+        }
     }
 }
 
 function onDragStart(event)
-{
+{   
+    this.isDraged = true;
+    this.position.y = this.position.y + this.getChildAt(1).position.y;
+    this.getChildAt(1).position.y = 0;
     // this.ax = this.position.x;
     // this.ay = this.position.y;
     console.log(this.position, this.ax, this.ay)
@@ -208,6 +235,7 @@ function onDragStart(event)
 
 function onDragEnd()
 {
+    this.isDraged = false;
     this.alpha = 1;
 
     this.dragging = false;
@@ -219,6 +247,14 @@ function onDragEnd()
     {
         this.position.y = this.ay;
         this.position.x = this.ax;
+        if (!this.inHand){
+            arrCardsHand.push(this);
+            const index = arrCardsTable.indexOf(this);
+            if (index > -1) {
+                arrCardsTable.splice(index, 1);
+            }
+            this.inHand = true;
+        }
     }
     else{
         socket.emit('my_event', {data: 'In Rect'});
@@ -227,6 +263,7 @@ function onDragEnd()
         if (index > -1) {
             arrCardsHand.splice(index, 1);
         }
+        this.inHand = false;
     }
     console.log(this.position, this.ax, this.ay)
     // set the interaction data to null
@@ -251,16 +288,16 @@ function onClick(e) {
 }
 
 function onButtonDown() {
-    this.isdown = true;
 }
 
 function onButtonUp() {
-    this.isdown = false;
 }
 
 function onButtonOver() {
     this.isOver = true;
-    this.parent.getChildAt(1).position.y = -this.parent.offsetUp;
+    if (!this.parent.isDraged && this.parent.inHand){
+        this.parent.getChildAt(1).position.y = -this.parent.offsetUp;
+    }
     // this.ay-this.offsetUp;
     
     // this.getChildAt(0).position.y = 50;
