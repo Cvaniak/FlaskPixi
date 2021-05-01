@@ -108,8 +108,7 @@ allObjects.addChild(cards);
 cards.zIndex = 3;
 app.stage.addChild(allObjects);
 // Chainable `add` to enqueue a resource
-loader.add('card'+1, 'img/card.png'); 
-for(var i=2; i<14; i++){
+for(var i=1; i<14; i++){
     // loader.add('card'+i,      'img/SuitOfClubs/suitOfClubs(1x)'+i+'.png');
     
     // loader.add('card'+(13+i), 'img/SuitOfSpades/suitOfSpades(1x)'+i+'.png');
@@ -126,6 +125,7 @@ var arrCardsTable = [];
 var tex = null
 var cardNumber = 0;
 var resourcesLoaded = null;
+var highestZIndex = 0;
 
 loader.load((loader, resources) => {
     resourcesLoaded = resources;
@@ -242,7 +242,8 @@ function onAdd(event){
 
 function onDragStart(event)
 {   
-    this.isDraged = true;
+    this.lastZIndex = this.zIndex;
+    this.zIndex = 1111;
     this.position.y = this.position.y + this.getChildAt(1).position.y;
     this.getChildAt(1).position.y = 0;
     // this.ax = this.position.x;
@@ -258,12 +259,11 @@ function onDragStart(event)
 
 function onDragEnd()
 {
-    this.isDraged = false;
     this.alpha = 1;
 
     this.dragging = false;
 
-    console.log(this.position, this.ax, this.ay)
+    console.log(this)
     if (this.position.y > table.position.y+table.height/2 ||
         !(this.position.x > table.position.x-table.width/2 && 
         this.position.x < table.position.x+table.width/2) )
@@ -288,8 +288,10 @@ function onDragEnd()
         }
         this.inHand = false;
     }
-    console.log(this.position, this.ax, this.ay)
+    console.log(this);
     // set the interaction data to null
+    highestZIndex = Math.max(cardNumber, highestZIndex)+1;
+    this.zIndex = highestZIndex;
     this.data = null;
     arrSort(arrCardsHand);
 }
