@@ -68,6 +68,19 @@ function newCard(tex, arr, cont){
     bunny.addChild(bunny2);
     bunny.inHand = true;
     bunny.isDraged = false;
+    var filter1 = new PIXI.filters.OutlineFilter();
+    filter1.color = 0x000000;
+    filter1.thickness = 3;
+    
+    var filter2 = new PIXI.filters.CRTFilter();
+    filter2.time = 2;
+    filter2.vignetting = 0.3;
+    filter2.vignettingAlpha = 0.5
+    filter2.noise = 0.2;
+    filter2.noiseSize = 4.2;
+    filter2.lineWidth = 1.2;
+    filter2.lineContrast = 0.3;
+    bunny2.filters = [filter1, filter2];
     return bunny
 }
 
@@ -125,7 +138,17 @@ loader.load((loader, resources) => {
     };
 });
 
-
+function animate(){
+    for(var i=0;i<arrCardsHand.length; i++)
+    {
+        arrCardsHand[i].getChildAt(1).filters[1].time += 0.4;     
+    }
+    for(var i=0;i<arrCardsTable.length; i++)
+    {
+        arrCardsTable[i].getChildAt(1).filters[1].time += 0.4;     
+    }
+}
+app.ticker.add(animate);
 var table = new PIXI.Graphics();
 
 table.beginFill(0x1144CC);
